@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Arbitrage Table</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #222; color: #fff; }
+    .profit { background: #d4edda; color: #155724; font-weight: bold; }
+    .loss { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <h2>Crypto Arbitrage Opportunities</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Coin</th>
+        <th>Binance</th>
+        <th>Kraken</th>
+        <th>Coinbase</th>
+        <th>Huobi</th>
+        <th>Gate.io</th>
+        <th>MEXC</th>
+        <th>KuCoin</th>
+        <th>Bybit</th>
+        <th>Spread %</th>
+        <th>Best Buy</th>
+        <th>Best Sell</th>
+      </tr>
+    </thead>
+    <tbody id="prices"></tbody>
+  </table>
+
+  <script>
+    const coins = [
+      "BTC","ETH","BNB","XRP","ADA","DOGE","SOL","DOT","MATIC","TON",
+      "SHIB","TRX","APT","ARB","SUI","PEPE","FLOKI","INJ","OP","XLM"
+    ];
+
+    const exchanges = {
+      binance: s => `https://api.binance.com/api/v3/ticker/price?symbol=${s}USDT`,
+      kraken: s => `https://api.kraken.com/0/public/Ticker?pair=${s}USDT`,
+      coinbase: s => `https://api.coinbase.com/v2/prices/${s}-USD/spot`,
+      huobi: s => `https://api.huobi.pro/market/detail/merged?symbol=${s.toLowerCase()}usdt`,
+      gate: s => `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${s}_USDT`,
+      mexc: s => `https://api.mexc.com/api/v3/ticker/price?symbol=${s}USDT`,
+      kucoin: s => `https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${s}-USDT`,
+      bybit: s => `https://api.bybit.com/v2/public/tickers?symbol=${s}USDT`
+    };
+
+    async function fetchPrice(exchange, coin) {
+      try {
+        let url = exchanges[exchange](coin);
+        let res = await fetch(url);
+        let data = await res.json();
+
+        switch (exchange) {
+          case "binance": return parseFloat(data.price);
+          case "kraken": return parseFloat(Object.values(data.result)[0].c[0]);
+          case "coinbase": return parseFloat(data.data.amount);
+          case "huobi": return parseFloat(data.tick.close);
+          case "gate": return parseFloat(data[0].last);
+          case "mexc": return parseFloat(data.price);
+          case "kucoin": return parseFloat(data.data.price);
+          case "bybit": return parseFloat(data.result[0].last_price);
+        }
+      } catch {
+        return null;
+      }
+    }
+
+    async function initTable() {
+      const tbody = document.getElementById("prices");
+      for (let coin of coins) {
+        let row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${coin}</td>
+          <td id="${coin}-binance">Loading...</td>
+          <td id="${coin}-kraken">Loading...</td>
+          <td id="${coin}-coinbase">Loading...</td>
+          <td id="${coin}-huobi">Loading...</td>
+          <td id="${coin}-gate">Loading...</td>
+          <td id="${coin}-mexc">Loading...</td>
+          <td id="${coin}-kucoin">Loading...</td>
+          <td id="${coin}-bybit">Loading...</td>
+          <td id="${coin}-spread">--</td>
+          <td id="${coin}-buy">--</td>
+          <td id="${coin}-sell">--</td>
+        `;
+        tbody.appendChild(row);
+      }
+    }
+
+    async function updatePrices() {
+      for (let coin of coins) {
+        let prices = {};
+
+        for (let ex of Object.keys(exchanges)) {
+          let price = await fetchPrice(ex, coin);
+          let cell = document.getElementById(`${coin}-${ex}`);
+          if (price) {
+            cell.textContent = price.toFixed(4);
+            prices[ex] = price;
+          } else {
+            cell.textContent = "N/A";
+          }
+        }
+
+        let spreadCell = document.getElementById(`${coin}-spread`);
+        let buyCell = document.getElementById(`${coin}-buy`);
+        let sellCell = document.getElementById(`${coin}-sell`);
+
+        let validPrices = Object.values(prices);
+        if (validPrices.length > 1) {
+          let minEx = Object.keys(prices).reduce((a, b) => prices[a] < prices[b] ? a : b);
+          let maxEx = Object.keys(prices).reduce((a, b) => prices[a] > prices[b] ? a : b);
+
+          let spread = (prices[maxEx] - prices[minEx]) / prices[minEx] * 100;
+          spreadCell.textContent = spread.toFixed(2) + "%";
+          spreadCell.className = spread > 1 ? "profit" : "loss";
+
+          buyCell.textContent = `${minEx} @ ${prices[minEx].toFixed(4)}`;
+          sellCell.textContent = `${maxEx} @ ${prices[maxEx].toFixed(4)}`;
+        } else {
+          spreadCell.textContent = "--";
+          buyCell.textContent = "--";
+          sellCell.textContent = "--";
+        }
+      }
+    }
+
+    initTable();
+    updatePrices();
+    setInterval(updatePrices, 10000); // refresh every 10s
+  </script>
+</body>
+</html>
