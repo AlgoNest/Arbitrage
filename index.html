@@ -6,9 +6,9 @@
   <title>Crypto Arbitrage Table</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background: #222; color: #fff; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+    th { background: #222; color: #fff; position: sticky; top: 0; }
     .profit { background: #d4edda; color: #155724; font-weight: bold; }
     .loss { background: #f8d7da; color: #721c24; }
   </style>
@@ -36,9 +36,17 @@
   </table>
 
   <script>
+    // 70+ coins (Top + small caps for arbitrage chances)
     const coins = [
       "BTC","ETH","BNB","XRP","ADA","DOGE","SOL","DOT","MATIC","TON",
-      "SHIB","TRX","APT","ARB","SUI","PEPE","FLOKI","INJ","OP","XLM"
+      "SHIB","TRX","APT","ARB","SUI","PEPE","FLOKI","INJ","OP","XLM",
+      "AVAX","LTC","NEAR","ATOM","FIL","AAVE","EOS","ETC","XMR","XTZ",
+      "SAND","MANA","RUNE","KSM","DASH","ENJ","ZIL","CHZ","CRO","FTM",
+      "DYDX","CFX","GMX","WOO","1INCH","LRC","CELR","ANKR","CVC","NKN",
+      "OCEAN","STORJ","VET","ICX","ONT","ZRX","REN","BAL","KAVA","MTL",
+      "BAND","SYS","BAT","HOT","SC","AR","YFI","UNI","GRT","SNX","COMP",
+      "ALGO","EGLD","RVN","QTUM","MASK","LUNA","LPT","SRM","CEL","API3",
+      "CRV","SXP","BCH","COTI","RAY","BEL","KDA","AMP","ILV","STX","JOE"
     ];
 
     const exchanges = {
@@ -73,29 +81,33 @@
       }
     }
 
-    async function initTable() {
-      const tbody = document.getElementById("prices");
-      for (let coin of coins) {
-        let row = document.createElement("tr");
-        row.innerHTML = `
+    function makeRow(coin) {
+      return `
+        <tr id="row-${coin}">
           <td>${coin}</td>
-          <td id="${coin}-binance">Loading...</td>
-          <td id="${coin}-kraken">Loading...</td>
-          <td id="${coin}-coinbase">Loading...</td>
-          <td id="${coin}-huobi">Loading...</td>
-          <td id="${coin}-gate">Loading...</td>
-          <td id="${coin}-mexc">Loading...</td>
-          <td id="${coin}-kucoin">Loading...</td>
-          <td id="${coin}-bybit">Loading...</td>
+          <td id="${coin}-binance">--</td>
+          <td id="${coin}-kraken">--</td>
+          <td id="${coin}-coinbase">--</td>
+          <td id="${coin}-huobi">--</td>
+          <td id="${coin}-gate">--</td>
+          <td id="${coin}-mexc">--</td>
+          <td id="${coin}-kucoin">--</td>
+          <td id="${coin}-bybit">--</td>
           <td id="${coin}-spread">--</td>
           <td id="${coin}-buy">--</td>
           <td id="${coin}-sell">--</td>
-        `;
-        tbody.appendChild(row);
-      }
+        </tr>
+      `;
+    }
+
+    async function initTable() {
+      const tbody = document.getElementById("prices");
+      tbody.innerHTML = coins.map(makeRow).join("");
     }
 
     async function updatePrices() {
+      let spreads = [];
+
       for (let coin of coins) {
         let prices = {};
 
@@ -125,17 +137,26 @@
 
           buyCell.textContent = `${minEx} @ ${prices[minEx].toFixed(4)}`;
           sellCell.textContent = `${maxEx} @ ${prices[maxEx].toFixed(4)}`;
+
+          spreads.push({ coin, spread });
         } else {
           spreadCell.textContent = "--";
           buyCell.textContent = "--";
           sellCell.textContent = "--";
         }
       }
+
+      // Auto-sort table by highest spread
+      spreads.sort((a, b) => b.spread - a.spread);
+      const tbody = document.getElementById("prices");
+      spreads.forEach(({ coin }) => {
+        tbody.appendChild(document.getElementById(`row-${coin}`));
+      });
     }
 
     initTable();
     updatePrices();
-    setInterval(updatePrices, 10000); // refresh every 10s
+    setInterval(updatePrices, 15000); // refresh every 15s
   </script>
 </body>
 </html>
