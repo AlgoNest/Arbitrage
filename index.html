@@ -398,34 +398,29 @@
     document.getElementById('activeExchanges').textContent = Object.keys(exchanges).length;
 
     async function fetchPrice(exchange, coin) {
-      try {
-        let url = exchanges[exchange](coin);
-        let res = await fetch(url);
-        let data = await res.json();
+  try {
+    let url = exchanges[exchange](coin);
+    let res = await fetch(url);
+    let data = await res.json();
 
-        switch (exchange) {
-          case "binance": return parseFloat(data.price);
-          case "kraken": return parseFloat(Object.values(data.result)[0].c[0]);
-          case "coinbase": return parseFloat(data.data.amount);
-          case "huobi": return parseFloat(data.tick.close);
-          case "gate":
-        if (Array.isArray(data)) {
-          let obj = data.find(item => item.currency_pair === `${coin}_USDT`);
-          return obj ? parseFloat(obj.last) : null;
-        }
-        return null;
-      case "mexc":
-        return parseFloat(data.price);
-      case "kucoin":
-        return parseFloat(data.data.price);
-      case "bybit":
-        if (data.result && data.result.list && data.result.list.length > 0) {
-          return parseFloat(data.result.list[0].lastPrice);
-        }
-      } catch {
-        return null;
-      }
+    switch (exchange) {
+      case "binance": return parseFloat(data.price);
+      case "kraken": return parseFloat(Object.values(data.result)[0].c[0]);
+      case "coinbase": return parseFloat(data.data.amount);
+      case "huobi": return parseFloat(data.tick.close);
+      case "gate": return data[0] ? parseFloat(data[0].last) : null;
+      case "mexc": return data.price ? parseFloat(data.price) : null;
+      case "kucoin": return (data.data && data.data.price) ? parseFloat(data.data.price) : null;
+      case "bybit": 
+        return (data.result?.list?.length > 0) 
+          ? parseFloat(data.result.list[0].lastPrice) 
+          : null;
     }
+  } catch {
+    return null;
+  }
+}
+
 
     function makeRow(coin) {
       return `
