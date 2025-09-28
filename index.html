@@ -382,15 +382,16 @@
     ];
 
     const exchanges = {
-      binance: s => `https://api.binance.com/api/v3/ticker/price?symbol=${s}USDT`,
-      kraken: s => `https://api.kraken.com/0/public/Ticker?pair=${s}USDT`,
-      coinbase: s => `https://api.coinbase.com/v2/prices/${s}-USD/spot`,
-      huobi: s => `https://api.huobi.pro/market/detail/merged?symbol=${s.toLowerCase()}usdt`,
-      gate: s => `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${s}_USDT`,
-      mexc: s => `https://api.mexc.com/api/v3/ticker/price?symbol=${s}USDT`,
-      kucoin: s => `https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${s}-USDT`,
-      bybit: s => `https://api.bybit.com/v2/public/tickers?symbol=${s}USDT`
-    };
+  binance: s => `https://api.binance.com/api/v3/ticker/price?symbol=${s}USDT`,
+  kraken: s => `https://api.kraken.com/0/public/Ticker?pair=${s === "BTC" ? "XBTUSDT" : s+"USDT"}`,
+  coinbase: s => `https://api.coinbase.com/v2/prices/${s}-USD/spot`,
+  huobi: s => `https://api.htx.com/market/detail/merged?symbol=${s.toLowerCase()}usdt`,
+  gate: s => `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${s}_USDT`,
+  mexc: s => `https://api.mexc.com/api/v3/ticker/price?symbol=${s}USDT`,
+  kucoin: s => `https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${s}-USDT`,
+  bybit: s => `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${s}USDT`
+};
+
 
     // Initialize stats
     document.getElementById('totalCoins').textContent = coins.length;
