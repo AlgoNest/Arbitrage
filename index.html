@@ -408,10 +408,19 @@
           case "kraken": return parseFloat(Object.values(data.result)[0].c[0]);
           case "coinbase": return parseFloat(data.data.amount);
           case "huobi": return parseFloat(data.tick.close);
-          case "gate": return parseFloat(data[0].last);
-          case "mexc": return parseFloat(data.price);
-          case "kucoin": return parseFloat(data.data.price);
-          case "bybit": return parseFloat(data.result[0].last_price);
+          case "gate":
+        if (Array.isArray(data)) {
+          let obj = data.find(item => item.currency_pair === `${coin}_USDT`);
+          return obj ? parseFloat(obj.last) : null;
+        }
+        return null;
+      case "mexc":
+        return parseFloat(data.price);
+      case "kucoin":
+        return parseFloat(data.data.price);
+      case "bybit":
+        if (data.result && data.result.list && data.result.list.length > 0) {
+          return parseFloat(data.result.list[0].lastPrice);
         }
       } catch {
         return null;
