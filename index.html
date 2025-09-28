@@ -381,16 +381,17 @@
       "CRV","SXP","BCH","COTI","RAY","BEL","KDA","AMP","ILV","STX","JOE"
     ];
 
-    const exchanges = {
+ const exchanges = {
   binance: s => `https://api.binance.com/api/v3/ticker/price?symbol=${s}USDT`,
   kraken: s => `https://api.kraken.com/0/public/Ticker?pair=${s === "BTC" ? "XBTUSDT" : s+"USDT"}`,
   coinbase: s => `https://api.coinbase.com/v2/prices/${s}-USD/spot`,
   huobi: s => `https://api.htx.com/market/detail/merged?symbol=${s.toLowerCase()}usdt`,
-  gate: s => `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${s}_USDT`,
-  mexc: s => `https://api.mexc.com/api/v3/ticker/price?symbol=${s}USDT`,
-  kucoin: s => `https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${s}-USDT`,
+  gate: s => `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${s}_USDT`,   // underscore
+  mexc: s => `https://api.mexc.com/api/v3/ticker/price?symbol=${s}USDT`,            // plain
+  kucoin: s => `https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${s}-USDT`, // dash
   bybit: s => `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${s}USDT`
 };
+
 
 
     // Initialize stats
@@ -408,13 +409,10 @@
       case "kraken": return parseFloat(Object.values(data.result)[0].c[0]);
       case "coinbase": return parseFloat(data.data.amount);
       case "huobi": return parseFloat(data.tick.close);
-      case "gate": return data[0] ? parseFloat(data[0].last) : null;
-      case "mexc": return data.price ? parseFloat(data.price) : null;
-      case "kucoin": return (data.data && data.data.price) ? parseFloat(data.data.price) : null;
-      case "bybit": 
-        return (data.result?.list?.length > 0) 
-          ? parseFloat(data.result.list[0].lastPrice) 
-          : null;
+      case "gate": return (Array.isArray(data) && data[0]) ? parseFloat(data[0].last) : null;
+      case "mexc":return data.price ? parseFloat(data.price) : null;
+      case "kucoin":return (data.data && data.data.price) ? parseFloat(data.data.price) : null;
+      case "bybit": return (data.result?.list?.length > 0) ? parseFloat(data.result.list[0].lastPrice) : null;
     }
   } catch {
     return null;
